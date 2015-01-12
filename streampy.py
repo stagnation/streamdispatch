@@ -3,6 +3,7 @@ from __future__ import division
 from subprocess import Popen, PIPE
 import pyperclip as pc
 import sys
+from redirect_parse import *
 
 verbose=False
 
@@ -30,9 +31,7 @@ def main():
 
 def play_url(url):
     livestreamerargs = ['best']
-    test = ['a', 'b']
     youtubeviewerargs = ['best', '--no-interactive']
-    print(type(url))
     #if isinstance(url, unicode):
     #    url = url.encode('UTF-8','ignore')
     if isinstance(url, bytes):
@@ -49,6 +48,7 @@ def play_url(url):
     elif 'youtube.com' not in url:
         if verbose:
             print('not youtube url - possibly shortened')
+        url = final_url(url)
 
     if 'youtube.com' in url:
         if verbose:
@@ -76,6 +76,16 @@ def play_url(url):
             args = ['youtube-viewer', url] + youtubeviewerargs
             p = Popen(args, stdout=PIPE, stderr=PIPE)
             outmsg = p.communicate()
+
+    else:
+        #hope livestreamer works, output to stdout
+        args = ['livestreamer', url] + livestreamerargs
+        if verbose:
+            print(args, len(args))
+        Popen(args)
+        p.communicate()
+
+
 
 if __name__ == '__main__':
     main()
