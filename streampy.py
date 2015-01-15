@@ -5,12 +5,13 @@ import pyperclip as pc
 import sys
 from redirect_parse import *
 
-verbose=False
-
 def read_url_from_clipboard():
     clipboard = pc.paste()
     clip_string = clipboard.encode('UTF-8','ignore')
     return clip_string
+
+def is_url(text):
+    return '.' in text
 
 def conditional_print(arguments):
     if verbose:
@@ -18,29 +19,47 @@ def conditional_print(arguments):
 
 def main():
     arguments = sys.argv
-    if len(arguments) > 1:
-        url = arguments[1]
-    else:
+    url = None
+    minimized = False
+    verbose = False
+    for arg in sys.argv[1:]:
+        if is_url(arg):
+            url = arg
+        elif arg[0] == 'm':
+            minimized = True
+        elif arg[0] == 'v':
+            verbose=True
+
+    if not url:
         url = read_url_from_clipboard()
 
     try:
-        play_url(url)
+        print("play!")
+        play_url(url, minimized, verbose)
     except Exception as e:
         print(e)
         pass
 
-def play_url(url):
-    livestreamerargs = ['best']
-    youtubeviewerargs = ['best', '--no-interactive']
+def play_url(url, minimized=False, verbose=False):
+    livestreamer_args = ['best']
+    youtubeviewer_args = ['best', '--no-interactive']
+    minimized_livestreamer_vlc = '-p vlc --novideo --qt-start-minimized'
+    minimized_youtubeviewer_vlc = '--append-arg="--novideo --qt-start-minimized"'
+    minimized_youtubeviewer_vlc = '--append-arg=--novideo'
+    minimized_youtubeviewer_vlc = '--append-arg=\"--novideo --qt-start-minimized\"'
+    if minimized:
+        livestreamer_args.append(minimized_livestreamer_vlc)
+        youtubeviewer_args.append(minimized_youtubeviewer_vlc)
     #if isinstance(url, unicode):
     #    url = url.encode('UTF-8','ignore')
     if isinstance(url, bytes):
         url = url.decode('UTF-8')
+
     if 'twitch.tv' in url:
         if verbose:
             print('twitch stream')
 
-        args = ['livestreamer', url] + livestreamerargs
+        args = ['livestreamer', url] + livestreamer_args
         if verbose:
             print(args, len(args))
         Popen(args)
@@ -53,7 +72,7 @@ def play_url(url):
     if 'youtube.com' in url:
         if verbose:
             print('youtube url')
-        args = ['livestreamer', url] + livestreamerargs
+        args = ['livestreamer', url] + livestreamer_args
         if verbose:
             print(args, len(args))
 
@@ -73,13 +92,15 @@ def play_url(url):
 
             #args[0] = 'youtube-viewer'
             #args.append('--no-interactive')
-            args = ['youtube-viewer', url] + youtubeviewerargs
+            args = ['youtube-viewer', url] + youtubeviewer_args
+            if verbose:
+                print("args:\n", args)
             p = Popen(args, stdout=PIPE, stderr=PIPE)
             outmsg = p.communicate()
 
-    else:
+    elif "twitch.tv" not in url:
         #hope livestreamer works, output to stdout
-        args = ['livestreamer', url] + livestreamerargs
+        args = ['livestreamer', url] + livestreamer_args
         if verbose:
             print(args, len(args))
         Popen(args)
