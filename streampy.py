@@ -3,6 +3,7 @@ from __future__ import division
 from subprocess import Popen, PIPE
 import pyperclip as pc
 import sys
+sys.path.append("/home/spill/arbete/streampy/")
 from redirect_parse import *
 
 def read_url_from_clipboard():
@@ -34,7 +35,6 @@ def main():
         url = read_url_from_clipboard()
 
     try:
-        print("play!")
         play_url(url, minimized, verbose)
     except Exception as e:
         print(e)
