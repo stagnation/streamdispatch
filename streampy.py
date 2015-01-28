@@ -8,13 +8,14 @@ from redirect_parse import *
 
 def read_url_from_clipboard():
     clipboard = pc.paste()
-    clip_string = clipboard.encode('UTF-8','ignore')
-    return clip_string
+    if isinstance(clipboard, bytes):
+        clipboard = clipboard.encode('UTF-8','ignore')
+    return clipboard
 
 def is_url(text):
     return '.' in text
 
-def conditional_print(arguments):
+def conditional_print(arguments, verbose=False):
     if verbose:
         print(arguments)
 
@@ -35,6 +36,7 @@ def main():
         url = read_url_from_clipboard()
 
     try:
+        url = final_url(url)
         play_url(url, minimized, verbose)
     except Exception as e:
         print(e)
@@ -43,10 +45,13 @@ def main():
 def play_url(url, minimized=False, verbose=False):
     livestreamer_args = ['best']
     youtubeviewer_args = ['best', '--no-interactive']
+    minimized_livestreamer_vlc = '-p mplayer -nogui'
     minimized_livestreamer_vlc = '-p vlc --novideo --qt-start-minimized'
     minimized_youtubeviewer_vlc = '--append-arg="--novideo --qt-start-minimized"'
-    minimized_youtubeviewer_vlc = '--append-arg=--novideo'
+    minimized_youtubeviewer_vlc = '--append-arg=--novideo' #works
     minimized_youtubeviewer_vlc = '--append-arg=\"--novideo --qt-start-minimized\"'
+    #-video-player=mpv
+    minimized_youtubeviewer_mpv = '-video-player=mpv --append-arg=--no-video'
     if minimized:
         livestreamer_args.append(minimized_livestreamer_vlc)
         youtubeviewer_args.append(minimized_youtubeviewer_vlc)
