@@ -22,13 +22,10 @@ def conditional_print(arguments, verbose=False):
 def main():
     arguments = sys.argv
     url = None
-    minimized = False
     verbose = False
     for arg in sys.argv[1:]:
         if is_url(arg):
             url = arg
-        elif arg[0] == 'm':
-            minimized = True
         elif arg[0] == 'v':
             verbose=True
 
@@ -36,33 +33,26 @@ def main():
         url = read_url_from_clipboard()
 
     try:
+        print(url)
         url = final_url(url)
-        play_url(url, minimized, verbose)
+        print(url)
+        play_url(url, verbose)
     except Exception as e:
         print(e)
         pass
 
-def play_url(url, minimized=False, verbose=False):
+def play_url(url, verbose=False):
     livestreamer_args = ['best']
     youtubeviewer_args = ['best', '--no-interactive']
-    minimized_livestreamer_vlc = '-p mplayer -nogui'
-    minimized_livestreamer_vlc = '-p vlc --novideo --qt-start-minimized'
-    minimized_youtubeviewer_vlc = '--append-arg="--novideo --qt-start-minimized"'
-    minimized_youtubeviewer_vlc = '--append-arg=--novideo' #works
-    minimized_youtubeviewer_vlc = '--append-arg=\"--novideo --qt-start-minimized\"'
-    #-video-player=mpv
-    minimized_youtubeviewer_mpv = '-video-player=mpv --append-arg=--no-video'
-    if minimized:
-        livestreamer_args.append(minimized_livestreamer_vlc)
-        youtubeviewer_args.append(minimized_youtubeviewer_vlc)
+
     #if isinstance(url, unicode):
     #    url = url.encode('UTF-8','ignore')
     if isinstance(url, bytes):
         url = url.decode('UTF-8')
 
+    print(url)
     if 'twitch.tv' in url:
-        if verbose:
-            print('twitch stream')
+        conditional_print('twitch stream', verbose)
 
         args = ['livestreamer', url] + livestreamer_args
         if verbose:
@@ -70,13 +60,11 @@ def play_url(url, minimized=False, verbose=False):
         Popen(args)
 
     elif 'youtube.com' not in url:
-        if verbose:
-            print('not youtube url - possibly shortened')
+        conditional_print('not youtube url - possibly shortened', verbose)
         url = final_url(url)
 
     if 'youtube.com' in url:
-        if verbose:
-            print('youtube url')
+        conditional_print('youtube url', verbose)
         args = ['livestreamer', url] + livestreamer_args
         if verbose:
             print(args, len(args))
@@ -98,16 +86,14 @@ def play_url(url, minimized=False, verbose=False):
             #args[0] = 'youtube-viewer'
             #args.append('--no-interactive')
             args = ['youtube-viewer', url] + youtubeviewer_args
-            if verbose:
-                print("args:\n", args)
+            conditional_print("args:\n", args, verbose)
             p = Popen(args, stdout=PIPE, stderr=PIPE)
             outmsg = p.communicate()
 
     elif "twitch.tv" not in url:
         #hope livestreamer works, output to stdout
         args = ['livestreamer', url] + livestreamer_args
-        if verbose:
-            print(args, len(args))
+        conditional_print(args, len(args), verbose)
         Popen(args)
         p.communicate()
 

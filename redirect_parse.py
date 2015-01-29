@@ -25,6 +25,8 @@ def urlquote(url):
                 quote_nonascii_path(parts[2])) + parts[3:])
 
 def final_url(url):
+    if "www" not in url:
+        return url
     url = quote_nonascii_path(url)
     rh = FinalURLHTTPRedirectHandler()
     opener = urllib.request.build_opener(rh)
