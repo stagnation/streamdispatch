@@ -3,8 +3,47 @@ from __future__ import division
 from subprocess import Popen, PIPE
 import pyperclip as pc
 import sys
-sys.path.append("/home/spill/arbete/streampy/")
-from redirect_parse import *
+import urllib.parse
+import urllib.request
+import re
+
+#html redirect following taken from torskbot
+#https://github.com/sebth/torskbot
+
+class FinalURLHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
+
+    def __init__(self, *args, **kwargs):
+        self.final_url = None
+        super().__init__(*args, **kwargs)
+
+    def redirect_request(self, req, fp, code, msg, hdrs, newurl):
+        self.final_url = newurl
+        return super().redirect_request(req, fp, code, msg, hdrs, newurl)
+
+def quote_nonascii_path(path):
+    return re.sub(
+            b'[\x80-\xff]',
+            lambda match: '%{:x}'.format(ord(match.group())).encode('ascii'),
+            path.encode()).decode('ascii')
+
+def urlquote(url):
+    parts = urllib.parse.urlsplit(url)
+    return urllib.parse.urlunsplit(
+            (parts[0], parts[1].encode('idna').decode('ascii'),
+                quote_nonascii_path(parts[2])) + parts[3:])
+
+def final_url(url):
+    if "www" not in url:
+        return url
+    url = quote_nonascii_path(url)
+    rh = FinalURLHTTPRedirectHandler()
+    opener = urllib.request.build_opener(rh)
+    opener.open(url)
+    final_url = rh.final_url
+    return rh.final_url if rh.final_url else url
+
+#end html redirect
+#
 
 def read_url_from_clipboard():
     clipboard = pc.paste()
@@ -33,9 +72,7 @@ def main():
         url = read_url_from_clipboard()
 
     try:
-        print(url)
         url = final_url(url)
-        print(url)
         play_url(url, verbose)
     except Exception as e:
         print(e)
@@ -50,14 +87,15 @@ def play_url(url, verbose=False):
     if isinstance(url, bytes):
         url = url.decode('UTF-8')
 
-    print(url)
+    conditional_print('verbose output on', verbose)
     if 'twitch.tv' in url:
         conditional_print('twitch stream', verbose)
 
         args = ['livestreamer', url] + livestreamer_args
         if verbose:
             print(args, len(args))
-        Popen(args)
+        p = Popen(args, stdout=PIPE, stderr=PIPE)
+        outmsg, errmsg = p.communicate()
 
     elif 'youtube.com' not in url:
         conditional_print('not youtube url - possibly shortened', verbose)
@@ -86,14 +124,16 @@ def play_url(url, verbose=False):
             #args[0] = 'youtube-viewer'
             #args.append('--no-interactive')
             args = ['youtube-viewer', url] + youtubeviewer_args
-            conditional_print("args:\n", args, verbose)
+            if verbose:
+                print("args:\n", args, verbose)
             p = Popen(args, stdout=PIPE, stderr=PIPE)
             outmsg = p.communicate()
 
     elif "twitch.tv" not in url:
         #hope livestreamer works, output to stdout
         args = ['livestreamer', url] + livestreamer_args
-        conditional_print(args, len(args), verbose)
+        if verbose:
+           print(args, len(args), verbose)
         Popen(args)
         p.communicate()
 
@@ -101,6 +141,7 @@ def play_url(url, verbose=False):
 
 if __name__ == '__main__':
     main()
+    #a couple of example links to test whether it works
     """
     url = 'http://www.twitch.tv/forgg'
     url = 'https://www.youtube.com/watch?v=QcqC4jtrR9Y'#regular
