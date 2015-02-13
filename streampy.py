@@ -144,6 +144,6 @@ if __name__ == '__main__':
     #a couple of example links to test whether it works
     """
     url = 'http://www.twitch.tv/forgg'
-    url = 'https://www.youtube.com/watch?v=QcqC4jtrR9Y'#regular
-    url = 'https://www.youtube.com/watch?v=NJ3aiM8K6D0'#protected
+    url = 'https://www.youtube.com/watch?v=QcqC4jtrR9Y'     #regular
+    url = 'https://www.youtube.com/watch?v=NJ3aiM8K6D0'     #protected
     """
