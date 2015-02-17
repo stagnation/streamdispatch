@@ -34,7 +34,10 @@ def urlquote(url):
 
 def final_url(url):
     if "www" not in url:
-        return url
+        if "http://" in url:
+            url.replace("http://","http://www.")
+        else:
+            return url
     url = quote_nonascii_path(url)
     rh = FinalURLHTTPRedirectHandler()
     opener = urllib.request.build_opener(rh)
@@ -65,7 +68,7 @@ def main():
     for arg in sys.argv[1:]:
         if is_url(arg):
             url = arg
-        elif arg[0] == 'v':
+        elif arg[0] == 'v' or arg == '-v':
             verbose=True
 
     if not url:
@@ -100,6 +103,7 @@ def play_url(url, verbose=False):
     elif 'youtube.com' not in url:
         conditional_print('not youtube url - possibly shortened', verbose)
         url = final_url(url)
+        conditional_print('final url %s' % (url), verbose)
 
     if 'youtube.com' in url:
         conditional_print('youtube url', verbose)
@@ -136,6 +140,7 @@ def play_url(url, verbose=False):
            print(args, len(args), verbose)
         Popen(args)
         p.communicate()
+
 
 
 
