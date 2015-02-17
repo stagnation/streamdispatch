@@ -138,7 +138,7 @@ def play_url(url, verbose=False):
         args = ['livestreamer', url] + livestreamer_args
         if verbose:
            print(args, len(args), verbose)
-        Popen(args)
+        p = Popen(args)
         p.communicate()
 
 
