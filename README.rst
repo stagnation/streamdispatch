@@ -62,12 +62,19 @@ Change the url-select script for urxvt like below (here key s has been used for 
 ``~/.urxvt/ext$ diff url-select urxvt-perls/url-select``
 
 ``137,140c137``
+
 ``<     } elsif ($char eq 's' || $char eq 'd') {``
+
 ``<         $self->exec_async( "streampy", ${$self->{found}[$self->{n}]}[4], "&" );``
+
 ``<         deactivate($self) unless $char eq 's';``
+
 ``<     } elsif ($char eq 'y') {``
+
 ``---``
+
 ``> 	} elsif ($char eq 'y') {``
+
 
 i3 integration
 
