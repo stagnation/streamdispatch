@@ -57,23 +57,16 @@ Integration
 URXVT integration
 if you use urxvt and the url-select script to open or copy links from your terminal it is easy to add a key that takes the link and opens it in streampy.
 
-Change the url-select script for urxvt like below (here key s has been used for Stream, and d because it is next to s).
+Change the url-select script (from urxvt-perls https://github.com/muennich/urxvt-perls) for urxvt like below (here key s has been used for Stream, and d because it is next to s).::
 
-``~/.urxvt/ext$ diff url-select urxvt-perls/url-select``
-
-``137,140c137``
-
-``<     } elsif ($char eq 's' || $char eq 'd') {``
-
-``<         $self->exec_async( "streampy", ${$self->{found}[$self->{n}]}[4], "&" );``
-
-``<         deactivate($self) unless $char eq 's';``
-
-``<     } elsif ($char eq 'y') {``
-
-``---``
-
-``> 	} elsif ($char eq 'y') {``
+    ~/.urxvt/ext$ diff url-select urxvt-perls/url-select
+    137,140c137
+    <     } elsif ($char eq 's' || $char eq 'd') {
+    <         $self->exec_async( "streampy", ${$self->{found}[$self->{n}]}[4], "&" );
+    <         deactivate($self) unless $char eq 's';
+    <     } elsif ($char eq 'y') {
+    ---
+    > 	} elsif ($char eq 'y') {
 
 
 i3 integration
