@@ -13,16 +13,17 @@ simple html-redirects is handled in case a given url is shortened or so. taken f
 
 Usage
 -----
-``python setup.py install``
-``$ streamdispatch <url>``
+``$ ./streampy.py <url>``
+or after linking to a directory in path
+``$ streampy <url>``
 
 dispatches the link to livestreamer or youtube-viewer to be opened in VLC.
 
-``$ streamdispacth``
+``$ streampy``
 
 since no url is specified the content of the system clipboard is read (via pyperclip dependency)
 
-``$ streamdpy -v <url>``
+``$ streampy -v <url>``
 
 verbose mode of the above with <url> given or left out.
 
