@@ -35,9 +35,12 @@ def urlquote(url):
 def final_url(url):
     if "www" not in url:
         if "http://" in url:
-            url.replace("http://","http://www.")
+            url = url.replace("http://","http://www.")
         else:
             return url
+    if "http" not in url:
+        if "www." in url:
+            url = url.replace("www.", "http://www.")
     url = quote_nonascii_path(url)
     rh = FinalURLHTTPRedirectHandler()
     opener = urllib.request.build_opener(rh)
@@ -68,8 +71,9 @@ def main():
     for arg in sys.argv[1:]:
         if is_url(arg):
             url = arg
-        elif arg[0] == 'v' or arg == '-v':
+        elif arg == '--verbose' or arg == '-v':
             verbose=True
+    conditional_print('verbose output on', verbose)
 
     if not url:
         url = read_url_from_clipboard()
@@ -81,67 +85,71 @@ def main():
         print(e)
         pass
 
-def play_url(url, verbose=False):
-    livestreamer_args = ['best']
-    youtubeviewer_args = ['best', '--no-interactive']
+def play_twitch(url, twitch_args, verbose):
+    conditional_print('twitch stream', verbose)
 
-    #if isinstance(url, unicode):
-    #    url = url.encode('UTF-8','ignore')
-    if isinstance(url, bytes):
-        url = url.decode('UTF-8')
+    args = twitch_args.format(url).split(' ')
+    if verbose:
+        print(args)
+    p = Popen(args, stdout=PIPE, stderr=PIPE)
+    outmsg, errmsg = p.communicate()
+    return outmsg, errmsg
 
-    conditional_print('verbose output on', verbose)
-    if 'twitch.tv' in url:
-        conditional_print('twitch stream', verbose)
+def play_youtube(url, youtube_args, protected_args, verbose):
+    conditional_print('youtube url', verbose)
+    args = youtube_args.format(url).split(' ')
+    if verbose:
+        print(args)
 
-        args = ['livestreamer', url] + livestreamer_args
+    p = Popen(args, stdout=PIPE, stderr=PIPE)
+    outmsg, errmsg = p.communicate()
+
+    if verbose:
+        print("process output\n", outmsg)
+        if errmsg:
+            print("error?", errmsg)
+
+    outmsg_string = outmsg.decode(encoding='UTF-8')
+    if 'youtube-dl' in outmsg_string:
+        #livestreamer suggests to use youtube-dl for protected videos
         if verbose:
-            print(args, len(args))
+            print("process output\n", outmsg)
+            print("TRYING youtube-viewer")
+
+        args = protected_args.format(url).split(' ')
+        if verbose:
+            print("args:\n", args, verbose)
         p = Popen(args, stdout=PIPE, stderr=PIPE)
         outmsg, errmsg = p.communicate()
+    return outmsg, errmsg
 
-    elif 'youtube.com' not in url:
-        conditional_print('not youtube url - possibly shortened', verbose)
+def play_url(url, verbose=False):
+
+    twitch_args = 'livestreamer {} best'
+    youtube_args = 'livestreamer {} best'
+    protected_args = 'youtube-viewer {} best --no-interactive'
+    fallback_args = twitch_args
+
+    if isinstance(url, bytes):
+        url = url.decode('UTF-8')
+    if 'youtube.com' not in url and 'twitch.tv' not in url:
+        conditional_print('neither youtube nor twitch - possibly shortened', verbose)
         url = final_url(url)
         conditional_print('final url %s' % (url), verbose)
 
+    if 'twitch.tv' in url:
+        play_twitch(url, twitch_args, verbose)
+
     if 'youtube.com' in url:
-        conditional_print('youtube url', verbose)
-        args = ['livestreamer', url] + livestreamer_args
+        play_youtube(url, youtube_args, protected_args, verbose)
+
+    else:
+        #fallback: hope livestreamer works, output to stdout
+        args = fallback_args.format(url).split(' ')
         if verbose:
-            print(args, len(args))
-
-        p = Popen(args, stdout=PIPE, stderr=PIPE)
-        outmsg, errmsg = p.communicate()
-
-        if verbose:
-            print("process output\n", outmsg)
-            print("error?", errmsg)
-            print("msg type", type(outmsg))
-
-        outmsg_string = outmsg.decode(encoding='UTF-8')
-        if 'youtube-dl' in outmsg_string:
-            if verbose:
-                print("process output\n", outmsg)
-                print("TRYING youtube-viewer")
-
-            #args[0] = 'youtube-viewer'
-            #args.append('--no-interactive')
-            args = ['youtube-viewer', url] + youtubeviewer_args
-            if verbose:
-                print("args:\n", args, verbose)
-            p = Popen(args, stdout=PIPE, stderr=PIPE)
-            outmsg = p.communicate()
-
-    elif "twitch.tv" not in url:
-        #hope livestreamer works, output to stdout
-        args = ['livestreamer', url] + livestreamer_args
-        if verbose:
-           print(args, len(args), verbose)
+           print(args)
         p = Popen(args)
         p.communicate()
-
-
 
 
 if __name__ == '__main__':
