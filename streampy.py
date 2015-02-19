@@ -140,7 +140,7 @@ def play_url(url, verbose=False):
     if 'twitch.tv' in url:
         play_twitch(url, twitch_args, verbose)
 
-    if 'youtube.com' in url:
+    elif 'youtube.com' in url:
         play_youtube(url, youtube_args, protected_args, verbose)
 
     else:
