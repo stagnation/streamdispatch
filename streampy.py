@@ -58,6 +58,8 @@ def read_url_from_clipboard():
     return clipboard
 
 def is_url(text):
+    #rudimentary check, replace with proper regexp.
+
     return '.' in text
 
 def conditional_print(arguments, verbose=False):
@@ -85,17 +87,8 @@ def main():
         print(e)
         pass
 
-def play_twitch(url, twitch_args, verbose):
-    conditional_print('twitch stream', verbose)
 
-    args = twitch_args.format(url).split(' ')
-    if verbose:
-        print(args)
-    p = Popen(args, stdout=PIPE, stderr=PIPE)
-    outmsg, errmsg = p.communicate()
-    return outmsg, errmsg
-
-def play_youtube(url, youtube_args, protected_args, verbose):
+def play(url, youtube_args,  verbose):
     conditional_print('youtube url', verbose)
     args = youtube_args.format(url).split(' ')
     if verbose:
@@ -109,43 +102,21 @@ def play_youtube(url, youtube_args, protected_args, verbose):
         if errmsg:
             print("error?", errmsg)
 
-    outmsg_string = outmsg.decode(encoding='UTF-8')
-    if 'youtube-dl' in outmsg_string:
-        #livestreamer suggests to use youtube-dl for protected videos
-        if verbose:
-            print("process output\n", outmsg)
-            print("TRYING youtube-viewer")
-
-        args = protected_args.format(url).split(' ')
-        if verbose:
-            print("args:\n", args, verbose)
-        p = Popen(args, stdout=PIPE, stderr=PIPE)
-        outmsg, errmsg = p.communicate()
     return outmsg, errmsg
 
 def play_url(url, verbose=False):
 
-    twitch_args = 'livestreamer {} best'
-    youtube_args = 'livestreamer {} best'
-    protected_args = 'youtube-viewer {} best --no-interactive'
-    fallback_args = twitch_args
+    CLI_args = 'mpv {}'
 
     if isinstance(url, bytes):
         url = url.decode('UTF-8')
-    if 'youtube.com' not in url and 'twitch.tv' not in url:
-        conditional_print('neither youtube nor twitch - possibly shortened', verbose)
-        url = final_url(url)
-        conditional_print('final url %s' % (url), verbose)
 
-    if 'twitch.tv' in url:
-        play_twitch(url, twitch_args, verbose)
-
-    elif 'youtube.com' in url:
-        play_youtube(url, youtube_args, protected_args, verbose)
+    if 'twitch.tv' or 'youtube.com' in url:
+        play(url, CLI_args, verbose)
 
     else:
         #fallback: hope livestreamer works, output to stdout
-        args = fallback_args.format(url).split(' ')
+        args = CLI_args.format(url).split(' ')
         if verbose:
            print(args)
         p = Popen(args)
@@ -159,4 +130,5 @@ if __name__ == '__main__':
     url = 'http://www.twitch.tv/forgg'
     url = 'https://www.youtube.com/watch?v=QcqC4jtrR9Y'     #regular
     url = 'https://www.youtube.com/watch?v=NJ3aiM8K6D0'     #protected
+    url = 'http://tinyurl.com/comeonnn'                     #tinyurl
     """
