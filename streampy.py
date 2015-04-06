@@ -33,17 +33,10 @@ def urlquote(url):
                 quote_nonascii_path(parts[2])) + parts[3:])
 
 def final_url(url):
-    if "www" not in url:
-        if "http://" in url:
-            url = url.replace("http://","http://www.")
-        else:
-            return url
-    if "http" not in url:
-        if "www." in url:
-            url = url.replace("www.", "http://www.")
     url = quote_nonascii_path(url)
     rh = FinalURLHTTPRedirectHandler()
     opener = urllib.request.build_opener(rh)
+    url=urlquote(url)
     opener.open(url)
     final_url = rh.final_url
     return rh.final_url if rh.final_url else url
@@ -81,6 +74,7 @@ def main():
         url = read_url_from_clipboard()
 
     try:
+        conditional_print("trying to folllow http redirects",verbose)
         url = final_url(url)
         play_url(url, verbose)
     except Exception as e:
