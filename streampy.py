@@ -47,7 +47,7 @@ def final_url(url):
 def read_url_from_clipboard():
     clipboard = pc.paste()
     if isinstance(clipboard, bytes):
-        clipboard = clipboard.encode('UTF-8','ignore')
+        clipboard = clipboard.decode('UTF-8','ignore')
     return clipboard
 
 def is_url(text):
@@ -76,6 +76,7 @@ def main():
     try:
         conditional_print("trying to folllow http redirects",verbose)
         url = final_url(url)
+        conditional_print("playing", verbose)
         play_url(url, verbose)
     except Exception as e:
         print(e)
